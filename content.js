@@ -1,3 +1,29 @@
+let MIN_VOLUME = 100;
+let IS_VOICE_ENABLED = true; // Biến kiểm soát âm thanh
+
+// 1. Lấy cấu hình ban đầu
+chrome.storage.local.get(["minVolume", "isVoiceEnabled"], (data) => {
+  if (data.minVolume !== undefined) MIN_VOLUME = parseInt(data.minVolume);
+  if (data.isVoiceEnabled !== undefined) IS_VOICE_ENABLED = data.isVoiceEnabled;
+  console.log(
+    `[Khởi động] Đọc lệnh >= ${MIN_VOLUME} cổ. Trạng thái loa: ${IS_VOICE_ENABLED ? "BẬT" : "TẮT"}`,
+  );
+});
+
+// 2. Lắng nghe thay đổi từ Popup (Công tắc & Slider)
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.minVolume) {
+    MIN_VOLUME = parseInt(changes.minVolume.newValue);
+    console.log(`[Cập nhật] Lọc lệnh >= ${MIN_VOLUME} cổ`);
+  }
+  if (changes.isVoiceEnabled) {
+    IS_VOICE_ENABLED = changes.isVoiceEnabled.newValue;
+    console.log(`[Cập nhật] Loa đang: ${IS_VOICE_ENABLED ? "BẬT" : "TẮT"}`);
+    // Tắt ngay lập tức nếu đang đọc dở câu
+    if (!IS_VOICE_ENABLED) window.speechSynthesis.cancel();
+  }
+});
+
 // 1. CƠ CHẾ ĐÁNH THỨC: Liên tục "đá" (resume) engine giọng nói để nó không bị treo
 setInterval(() => {
   if (window.speechSynthesis.paused) {
@@ -6,6 +32,9 @@ setInterval(() => {
 }, 10000); // 10 giây gọi 1 lần
 
 function speak(text) {
+  // 🎯 CHẶN ĐỌC: Nếu công tắc đang tắt, thoát hàm ngay lập tức
+  if (!IS_VOICE_ENABLED) return;
+
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "vi-VN";

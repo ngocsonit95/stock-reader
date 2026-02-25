@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      :root {
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --success: #10b981;
+        --danger: #ef4444;
+        --border-color: #334155;
+      }
+      body {
+        width: 300px;
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .header-left svg {
+        width: 20px;
+        height: 20px;
+        color: var(--primary);
+      }
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      /* Toggle Switch */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider-toggle {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--danger);
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+      .slider-toggle:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider-toggle {
+        background-color: var(--success);
+      }
+      input:checked + .slider-toggle:before {
+        transform: translateX(20px);
+      }
+
+      /* Range Slider */
+      .filter-section {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+      }
+      .filter-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+      .vol-value {
+        color: var(--primary);
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        background: transparent;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: var(--primary);
+        cursor: pointer;
+        margin-top: -6px;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 6px;
+        cursor: pointer;
+        background: var(--border-color);
+        border-radius: 5px;
+      }
+
+      /* Button & Status */
+      button {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-hover)
+        );
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+      #status {
+        font-size: 13px;
+        color: var(--success);
+        text-align: center;
+        margin-top: 15px;
+        display: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-left">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+          />
+        </svg>
+        <h3>Stock Voice</h3>
+      </div>
+      <label class="switch" title="Bật/Tắt Giọng Nói">
+        <input type="checkbox" id="voiceToggle" checked />
+        <span class="slider-toggle"></span>
+      </label>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-header">
+        <span>LỌC KHỐI LƯỢNG LỚN HƠN:</span>
+        <span class="vol-value"><span id="volDisplay">100</span> cổ</span>
+      </div>
+      <input
+        type="range"
+        id="volSlider"
+        min="100"
+        max="100000"
+        step="100"
+        value="100"
+      />
+    </div>
+
+    <button id="saveBtn">Lưu Cấu Hình</button>
+    <div id="status">✅ Đã lưu thiết lập!</div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
