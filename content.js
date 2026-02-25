@@ -1,5 +1,8 @@
 let MIN_VOLUME = 100;
 let IS_VOICE_ENABLED = true; // Biến kiểm soát âm thanh
+const TELEGRAM_TOKEN = "8780337688:AAGXja1qaJg3Mp9Me-X1B3zwycKXCdlx5Ms"; // Thay Token của bạn
+const TELEGRAM_CHAT_ID = "1435951187"; // Thay Chat ID của bạn
+const SHARK_VOLUME = 50000; // Ngưỡng gọi là "Cá mập" (VD: 50,000 cổ)
 
 // 1. Lấy cấu hình ban đầu
 chrome.storage.local.get(["minVolume", "isVoiceEnabled"], (data) => {
@@ -90,9 +93,48 @@ setInterval(() => {
           const cleanPrice = price.replace(".", " chấm ");
           const msg = `${sideText} ${cleanVol} cổ. Giá ${cleanPrice}`;
           speak(msg);
+
+          // 🎯 KÍCH HOẠT BÁO ĐỘNG CÁ MẬP (TELEGRAM)
+          if (cleanVol >= SHARK_VOLUME) {
+            sendTelegramAlert(sideText, cleanVol, price);
+          }
         }
         lastTradeKey = currentKey;
       }
     }
   }
 }, 500);
+
+// Hàm bắn thông báo khẩn cấp qua Telegram
+async function sendTelegramAlert(side, volume, price) {
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
+
+  // Tự động lấy tên mã cổ phiếu từ tiêu đề trang web (VD: "IJC - Công ty Cổ phần...")
+  const symbol = document.title.split("-")[0].trim() || "Cổ Phiếu";
+
+  const emoji = side === "Mua" ? "🟢" : side === "Bán" ? "🔴" : "⚪";
+  const alertMsg =
+    `🚨 <b>CÁ MẬP XUẤT HIỆN</b> 🚨\n\n` +
+    `📊 Mã: <b>${symbol}</b>\n` +
+    `🔥 Hành động: ${emoji} <b>${side} CHỦ ĐỘNG</b>\n` +
+    `💰 Khối lượng: <b>${Number(volume).toLocaleString("vi-VN")} cổ</b>\n` +
+    `💵 Mức giá: <b>${price}</b>\n\n` +
+    `<i>🕒 ${new Date().toLocaleTimeString("vi-VN")} - Từ Stock Radar</i>`;
+
+  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: alertMsg,
+        parse_mode: "HTML", // Để hiển thị in đậm, in nghiêng
+      }),
+    });
+    console.log(`✈️ [Telegram] Đã báo động Cá Mập mã ${symbol}!`);
+  } catch (error) {
+    console.error("Lỗi gửi Telegram:", error);
+  }
+}
