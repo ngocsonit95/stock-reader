@@ -1,3 +1,10 @@
+// 1. CƠ CHẾ ĐÁNH THỨC: Liên tục "đá" (resume) engine giọng nói để nó không bị treo
+setInterval(() => {
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+  }
+}, 10000); // 10 giây gọi 1 lần
+
 function speak(text) {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
@@ -7,8 +14,15 @@ function speak(text) {
 }
 
 let lastTradeKey = "";
+let heartbeatCount = 0;
 
 setInterval(() => {
+  // 2. NHỊP TIM: Báo hiệu Bot vẫn sống mỗi 10 giây (20 chu kỳ * 500ms)
+  heartbeatCount++;
+  if (heartbeatCount % 20 === 0) {
+    console.log("💓 Bot vẫn đang thở và quét dữ liệu...");
+  }
+
   const allVisibleItems = document.querySelectorAll(
     '[data-test-id="virtuoso-item-list"] [data-index]',
   );
