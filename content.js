@@ -53,12 +53,13 @@ setInterval(() => {
       if (currentKey !== lastTradeKey) {
         const cleanVol = parseInt(volume.replace(/,/g, ""));
 
-        // Sơn có thể bỏ comment dòng này để xem Console có lấy đúng số chưa
+        // có thể bỏ comment dòng này để xem Console có lấy đúng số chưa
         // console.log(`[DEBUG] Lấy được: T=${time}, P=${price}, V=${cleanVol}, S=${side}`);
 
         if (cleanVol >= 100) {
           let sideText = side === "M" ? "Mua" : side === "B" ? "Bán" : "Khớp";
-          const msg = `${sideText} ${volume} cổ. Giá ${price}`;
+          const cleanPrice = price.replace(".", " chấm ");
+          const msg = `${sideText} ${cleanVol} cổ. Giá ${cleanPrice}`;
           speak(msg);
         }
         lastTradeKey = currentKey;
