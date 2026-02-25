@@ -22,7 +22,7 @@ setInterval(() => {
         : curr;
     });
 
-    // 🎯 ĐIỂM SỬA LỖI: Đi sâu vào lớp chứa 5 cột (time, price, +/-, vol, side)
+    // 🎯 Đi sâu vào lớp chứa 5 cột (time, price, +/-, vol, side)
     const innerRow = latestItem.querySelector(".flex-row .flex-row");
 
     if (innerRow && innerRow.children.length >= 5) {
@@ -44,12 +44,7 @@ setInterval(() => {
 
         if (cleanVol >= 100) {
           let sideText = side === "M" ? "Mua" : side === "B" ? "Bán" : "Khớp";
-          const msg = `I J C. ${sideText} ${volume} cổ. Giá ${price}`;
-
-          console.log(
-            "%c" + msg,
-            "color: #ff00ff; font-weight: bold; font-size: 14px;",
-          );
+          const msg = `${sideText} ${volume} cổ. Giá ${price}`;
           speak(msg);
         }
         lastTradeKey = currentKey;
