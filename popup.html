@@ -164,6 +164,38 @@
         display: none;
         font-weight: 600;
       }
+
+      /* Telegram section */
+      .telegram-section {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+      }
+      .telegram-section label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+      }
+      .telegram-section input {
+        width: 100%;
+        padding: 8px 10px;
+        margin-bottom: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-color);
+        color: var(--text-main);
+        font-size: 13px;
+        box-sizing: border-box;
+      }
+      .telegram-section input::placeholder {
+        color: var(--text-muted);
+      }
+      .telegram-section input:last-of-type {
+        margin-bottom: 0;
+      }
     </style>
   </head>
   <body>
@@ -203,6 +235,23 @@
         max="100000"
         step="100"
         value="100"
+      />
+    </div>
+
+    <div class="telegram-section">
+      <label for="telegramToken">Telegram Bot Token (báo Cá mập)</label>
+      <input
+        type="password"
+        id="telegramToken"
+        placeholder="123456:ABC..."
+        autocomplete="off"
+      />
+      <label for="telegramChatId">Telegram Chat ID</label>
+      <input
+        type="text"
+        id="telegramChatId"
+        placeholder="1435951187"
+        autocomplete="off"
       />
     </div>
 

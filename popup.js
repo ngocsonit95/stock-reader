@@ -4,18 +4,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const voiceToggle = document.getElementById("voiceToggle");
   const saveBtn = document.getElementById("saveBtn");
   const statusDiv = document.getElementById("status");
+  const telegramTokenInput = document.getElementById("telegramToken");
+  const telegramChatIdInput = document.getElementById("telegramChatId");
 
   // 1. Load dữ liệu đã lưu khi mở Popup
-  chrome.storage.local.get(["minVolume", "isVoiceEnabled"], (data) => {
-    // Xử lý Slider
-    const savedVol = data.minVolume !== undefined ? data.minVolume : 100;
-    volSlider.value = savedVol;
-    volDisplay.innerText = Number(savedVol).toLocaleString("vi-VN");
+  chrome.storage.local.get(
+    ["minVolume", "isVoiceEnabled", "telegramToken", "telegramChatId"],
+    (data) => {
+      const savedVol = data.minVolume !== undefined ? data.minVolume : 100;
+      volSlider.value = savedVol;
+      volDisplay.innerText = Number(savedVol).toLocaleString("vi-VN");
 
-    // Xử lý Toggle (Mặc định là Bật)
-    voiceToggle.checked =
-      data.isVoiceEnabled !== undefined ? data.isVoiceEnabled : true;
-  });
+      voiceToggle.checked =
+        data.isVoiceEnabled !== undefined ? data.isVoiceEnabled : true;
+
+      if (data.telegramToken) telegramTokenInput.value = data.telegramToken;
+      if (data.telegramChatId) telegramChatIdInput.value = data.telegramChatId;
+    },
+  );
 
   // 2. Cập nhật con số hiển thị ngay khi kéo thanh trượt
   volSlider.addEventListener("input", () => {
@@ -27,12 +33,14 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.storage.local.set({ isVoiceEnabled: voiceToggle.checked });
   });
 
-  // 4. Nút Lưu (Dành cho việc kéo Slider xong)
+  // 4. Nút Lưu (Slider + Telegram)
   saveBtn.addEventListener("click", () => {
     chrome.storage.local.set(
       {
         minVolume: parseInt(volSlider.value),
         isVoiceEnabled: voiceToggle.checked,
+        telegramToken: (telegramTokenInput.value || "").trim(),
+        telegramChatId: (telegramChatIdInput.value || "").trim(),
       },
       () => {
         statusDiv.style.display = "block";

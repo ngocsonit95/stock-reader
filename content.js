@@ -1,19 +1,25 @@
 let MIN_VOLUME = 100;
-let IS_VOICE_ENABLED = true; // Biến kiểm soát âm thanh
-const TELEGRAM_TOKEN = "8780337688:AAGXja1qaJg3Mp9Me-X1B3zwycKXCdlx5Ms"; // Thay Token của bạn
-const TELEGRAM_CHAT_ID = "1435951187"; // Thay Chat ID của bạn
+let IS_VOICE_ENABLED = true;
+let TELEGRAM_TOKEN = "";
+let TELEGRAM_CHAT_ID = "";
 const SHARK_VOLUME = 50000; // Ngưỡng gọi là "Cá mập" (VD: 50,000 cổ)
 
-// 1. Lấy cấu hình ban đầu
-chrome.storage.local.get(["minVolume", "isVoiceEnabled"], (data) => {
-  if (data.minVolume !== undefined) MIN_VOLUME = parseInt(data.minVolume);
-  if (data.isVoiceEnabled !== undefined) IS_VOICE_ENABLED = data.isVoiceEnabled;
-  console.log(
-    `[Khởi động] Đọc lệnh >= ${MIN_VOLUME} cổ. Trạng thái loa: ${IS_VOICE_ENABLED ? "BẬT" : "TẮT"}`,
-  );
-});
+// 1. Lấy cấu hình ban đầu từ storage (không hardcode token/chatId)
+chrome.storage.local.get(
+  ["minVolume", "isVoiceEnabled", "telegramToken", "telegramChatId"],
+  (data) => {
+    if (data.minVolume !== undefined) MIN_VOLUME = parseInt(data.minVolume);
+    if (data.isVoiceEnabled !== undefined)
+      IS_VOICE_ENABLED = data.isVoiceEnabled;
+    if (data.telegramToken) TELEGRAM_TOKEN = data.telegramToken;
+    if (data.telegramChatId) TELEGRAM_CHAT_ID = data.telegramChatId;
+    console.log(
+      `[Khởi động] Đọc lệnh >= ${MIN_VOLUME} cổ. Trạng thái loa: ${IS_VOICE_ENABLED ? "BẬT" : "TẮT"}`,
+    );
+  },
+);
 
-// 2. Lắng nghe thay đổi từ Popup (Công tắc & Slider)
+// 2. Lắng nghe thay đổi từ Popup (Slider, Toggle, Telegram)
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.minVolume) {
     MIN_VOLUME = parseInt(changes.minVolume.newValue);
@@ -22,9 +28,12 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.isVoiceEnabled) {
     IS_VOICE_ENABLED = changes.isVoiceEnabled.newValue;
     console.log(`[Cập nhật] Loa đang: ${IS_VOICE_ENABLED ? "BẬT" : "TẮT"}`);
-    // Tắt ngay lập tức nếu đang đọc dở câu
     if (!IS_VOICE_ENABLED) window.speechSynthesis.cancel();
   }
+  if (changes.telegramToken)
+    TELEGRAM_TOKEN = changes.telegramToken.newValue || "";
+  if (changes.telegramChatId)
+    TELEGRAM_CHAT_ID = changes.telegramChatId.newValue || "";
 });
 
 // 1. CƠ CHẾ ĐÁNH THỨC: Liên tục "đá" (resume) engine giọng nói để nó không bị treo
@@ -34,14 +43,59 @@ setInterval(() => {
   }
 }, 10000); // 10 giây gọi 1 lần
 
+// Khởi tạo danh sách giọng nói
+let availableVoices = [];
+
+// Trình duyệt cần một chút thời gian để tải danh sách giọng nói,
+// sự kiện này đảm bảo chúng ta lấy được dữ liệu ngay khi nó sẵn sàng.
+window.speechSynthesis.onvoiceschanged = () => {
+  availableVoices = window.speechSynthesis.getVoices();
+};
+
 function speak(text) {
-  // 🎯 CHẶN ĐỌC: Nếu công tắc đang tắt, thoát hàm ngay lập tức
   if (!IS_VOICE_ENABLED) return;
 
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "vi-VN";
-  utterance.rate = 1.3;
+  utterance.rate = 1.4;
+
+  // Nếu danh sách chưa kịp load, thử lấy lại lần nữa
+  if (availableVoices.length === 0) {
+    availableVoices = window.speechSynthesis.getVoices();
+  }
+
+  // Chỉ dùng giọng tiếng Việt
+  const viVoices = availableVoices.filter((voice) => voice.lang.includes("vi"));
+
+  // Nhận diện giọng nữ (Windows: Hoài My/Mai, macOS: Linh, Chrome: Google)
+  const isFemale = (name) =>
+    /Google|Linh|Mai|Hoài|Hoai|My|Female|Nữ|nữ|woman|Zira|Susan|Samantha/i.test(
+      name || "",
+    );
+  // Loại trừ giọng nam (Windows thường mặc định "Microsoft An")
+  const isMale = (name) => {
+    if (!name) return false;
+    const n = name;
+    if (n.includes("Microsoft An")) return true;
+    if (/\bAn\b/i.test(n) && !/Hoài|Hoai|My|Mai/.test(n)) return true;
+    if (/\bNam\b/i.test(n) && !n.includes("Vietnam")) return true;
+    if (/\bMale\b/i.test(n) && !n.includes("Female")) return true;
+    if (/\bMan\b/i.test(n) && !n.includes("Woman")) return true;
+    return false;
+  };
+
+  if (viVoices.length > 0) {
+    // 1) Ưu tiên giọng nữ tiếng Việt
+    let chosen = viVoices.find((v) => isFemale(v.name));
+    // 2) Nếu không có, dùng giọng Việt nào KHÔNG phải giọng nam (tránh Microsoft An)
+    if (!chosen) chosen = viVoices.find((v) => !isMale(v.name));
+    // 3) Cuối cùng mới chấp nhận giọng nam
+    if (!chosen) chosen = viVoices[0];
+
+    utterance.voice = chosen;
+  }
+
   window.speechSynthesis.speak(utterance);
 }
 
@@ -88,7 +142,7 @@ setInterval(() => {
         // có thể bỏ comment dòng này để xem Console có lấy đúng số chưa
         // console.log(`[DEBUG] Lấy được: T=${time}, P=${price}, V=${cleanVol}, S=${side}`);
 
-        if (cleanVol >= 100) {
+        if (cleanVol >= MIN_VOLUME) {
           let sideText = side === "M" ? "Mua" : side === "B" ? "Bán" : "Khớp";
           const cleanPrice = price.replace(".", " chấm ");
           const msg = `${sideText} ${cleanVol} cổ. Giá ${cleanPrice}`;

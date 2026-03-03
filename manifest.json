@@ -7,6 +7,9 @@
         "tts",
         "storage"
     ],
+    "host_permissions": [
+        "https://api.telegram.org/*"
+    ],
     "action": {
         "default_popup": "popup.html",
         "default_title": "Cấu hình Đọc lệnh"
